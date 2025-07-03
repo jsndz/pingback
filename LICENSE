@@ -1,0 +1,25 @@
+Business Source License 1.1
+
+Licensor: Jaison Dsouza <jaisondz9360@gmail.com>
+Licensed Work: The Pingback project (codebase, documentation, and tools)
+Change Date: 2029-07-30
+Change License: Apache License, Version 2.0
+
+Terms
+
+1. Use Limitation  
+   You may use this Licensed Work for personal, academic, and non-commercial purposes only. Commercial use—including running Codexa as a paid SaaS or integrating it into commercial tools—is not permitted until the Change Date.
+
+2. Contribution  
+   You may copy, modify, and contribute to the codebase. Contributions must also be licensed under this license.
+
+3. Distribution  
+   You may fork and share modified versions **only for non-commercial use** and must include this LICENSE in all distributions.
+
+4. No Competing Services  
+   You may not use Codexa’s code to build or run a competing product or service that offers similar static analysis or AI-assisted development tooling.
+
+5. Change Date  
+   On 2029-07-30, this license will automatically convert to the Apache License 2.0, and all use restrictions will be lifted.
+
+For more information, see LICENSE-FAQ.md
