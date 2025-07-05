@@ -57,6 +57,7 @@ const Navigation: React.FC = () => {
                 </Link>
               );
             })}
+            <a href="/auth/login">Login</a>
           </div>
 
           {/* Mobile Menu Button */}
