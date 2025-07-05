@@ -200,3 +200,16 @@ MIT License © 2025 Jaison Dsouza
 ### Crafted for indie makers who just want user feedback without the noise.
 
 ---
+
+    ➤ User creates a Project → creates a Widget → configures template, theme, colors, allowed origins, fields.
+
+    ➤ Frontend embeds:
+
+<script src="https://cdn.pingback.io/widget.js" data-widget-id="abc123"></script>
+
+    ➤ widget.js calls:
+    GET /api/widgets/abc123
+
+    ➤ Renders form based on fields/theme from DB.
+
+    ➤ On submit → POST to /api/feedback, saves as a Feedback row.
