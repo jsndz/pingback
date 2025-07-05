@@ -33,32 +33,6 @@ const Hero: React.FC = () => {
               view github
             </button>
           </div>
-
-          {/* Terminal Demo */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-[#12132D] rounded-lg border border-[#2B2D42] p-6 text-left">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-[#FF5F56] rounded-full"></div>
-                <div className="w-3 h-3 bg-[#FFBD2E] rounded-full"></div>
-                <div className="w-3 h-3 bg-[#27CA3F] rounded-full"></div>
-                <Terminal size={16} className="ml-2 text-[#8891A5]" />
-              </div>
-              <div className="font-mono text-sm">
-                <div className="text-[#8891A5]">$ npm install pingback</div>
-                <div className="text-[#B8FF00] mt-2">
-                  ✓ Installed successfully
-                </div>
-                <div className="text-[#8891A5] mt-2">$ pingback init</div>
-                <div className="text-[#00F0FF] mt-2">
-                  → Project created: myapp-feedback
-                </div>
-                <div className="text-[#8891A5] mt-2">$ pingback deploy</div>
-                <div className="text-[#B8FF00] mt-2 animate-pulse">
-                  ⚡ Live at: https://fb.pingback.dev/abc123
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
