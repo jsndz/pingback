@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Pingback API
+  version: 1.0.0
+  description: Lightweight feedback API for indie makers
+servers:
+  - url: https://api.pingback.io
+    description: Production server
+  - url: http://localhost:8080
+    description: Local dev server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    FeedbackSubmission:
+      type: object
+      required:
+        - widgetId
+        - content
+      properties:
+        widgetId:
+          type: string
+          example: abc123
+        content:
+          type: string
+          example: Love this product!
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+        widgetId:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    WidgetConfig:
+      type: object
+      properties:
+        widgetId:
+          type: string
+        fields:
+          type: array
+          items:
+            type: string
+        theme:
+          type: string
+          example: dark
+
+paths:
+  /api/health:
+    get:
+      summary: Health Check
+      responses:
+        "200":
+          description: Server is running
+
+  /api/feedback:
+    post:
+      summary: Submit anonymous feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackSubmission"
+      responses:
+        "200":
+          description: Feedback submitted
+    get:
+      summary: List all feedback (auth required)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of feedback
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Feedback"
+
+  /api/feedback/{id}:
+    get:
+      summary: Get a single feedback (optional)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Single feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+
+  /api/widgets/{widgetId}:
+    get:
+      summary: Get widget config
+      parameters:
+        - in: path
+          name: widgetId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Widget config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WidgetConfig"
+
+  /api/me:
+    get:
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authenticated user profile
+
+  /api/notifications/slack:
+    post:
+      summary: Add Slack webhook for notifications
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                webhookUrl:
+                  type: string
+      responses:
+        "200":
+          description: Slack webhook added
+
+  /api/projects:
+    get:
+      summary: List user projects
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of projects
+
+    post:
+      summary: Create a new project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Project created
+
+  /api/projects/{projectId}/invite:
+    post:
+      summary: Invite teammate to project
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        "200":
+          description: Invite sent
+
+  /api/board/{widgetId}:
+    get:
+      summary: Public feedback board
+      responses:
+        "200":
+          description: Public feedback + upvotes
+
+  /api/board/{widgetId}/vote:
+    post:
+      summary: Upvote feedback on public board
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedbackId:
+                  type: string
+      responses:
+        "200":
+          description: Vote counted
+
+  /api/stripe/checkout:
+    post:
+      summary: Create Stripe Checkout session
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Stripe session created
+
+  /api/feedback/export:
+    get:
+      summary: Export feedback (CSV/JSON)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Feedback export
+
+  /api/analytics:
+    get:
+      summary: Get dashboard analytics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Basic analytics data
+
+security:
+  - bearerAuth: []

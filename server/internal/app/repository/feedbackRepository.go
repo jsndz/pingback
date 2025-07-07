@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/google/uuid"
 	"github.com/jsndz/pingback/internal/app/model"
 	"gorm.io/gorm"
 )
@@ -21,10 +22,10 @@ func (r *FeedbackRepository) Create(feedback *model.Feedback) (*model.Feedback ,
 	return  feedback,nil
 }
 
-func (r *FeedbackRepository) Get(Email string) (*model.Feedback, error) {
+func (r *FeedbackRepository) GetAll(widgetId uuid.UUID) (*model.Feedback, error) {
     var feedback model.Feedback
 
-	err := r.db.First(&feedback, "Email = ?", Email).Error
+	err := r.db.Find(&feedback, "WidgetID = ?", widgetId).Error
     if err != nil {
         return nil, err 
     }

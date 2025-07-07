@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   FolderOpen,
   Plus,
@@ -10,6 +9,7 @@ import {
   LinkSimple,
   Chat,
 } from "phosphor-react";
+import Link from "next/link";
 
 interface Project {
   id: string;
@@ -122,7 +122,7 @@ const Projects: React.FC = () => {
             </div>
 
             <Link
-              to="/projects/create"
+              href="/projects/create"
               className="bg-[#B8FF00] text-[#0A0A23] px-6 py-3 rounded-lg font-semibold hover:bg-[#A3E600] transition-all flex items-center gap-2 group"
             >
               <Plus
@@ -142,7 +142,7 @@ const Projects: React.FC = () => {
                 create your first project to start collecting feedback
               </p>
               <Link
-                to="/projects/create"
+                href="/projects/create"
                 className="bg-[#B8FF00] text-[#0A0A23] px-6 py-3 rounded-lg font-semibold hover:bg-[#A3E600] transition-all inline-flex items-center gap-2"
               >
                 <Plus size={20} />
