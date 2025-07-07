@@ -1,4 +1,4 @@
-package utils
+package middleware
 
 import (
 	"context"
@@ -10,11 +10,12 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jsndz/pingback/pkg/utils"
 )
 
 
-var AUTH0_AUDIENCE = GetEnv("AUTH0_AUDIENCE")
-var AUTH0_DOMAIN = GetEnv("AUTH0_DOMAIN")
+var AUTH0_AUDIENCE = utils.GetEnv("AUTH0_AUDIENCE")
+var AUTH0_DOMAIN = utils.GetEnv("AUTH0_DOMAIN")
 var Auth0JWKSURL = AUTH0_DOMAIN + ".well-known/jwks.json"
 
 
@@ -60,7 +61,10 @@ func JWTMiddleware( kf keyfunc.Keyfunc) (gin.HandlerFunc) {
 			return
 		}
 		userId := claims["sub"]	
-		c.Set("user",userId)	
+		email := claims["email"]	
+
+		c.Set("user", userId)
+		c.Set("email", email)	
 		c.Next()
 	}
 }

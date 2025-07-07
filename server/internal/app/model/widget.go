@@ -15,6 +15,7 @@ type Widget struct {
     Name            string
     Template        string            
     Theme           string   
+    IsActive        bool
     PrimaryColor    string          
     AllowedOrigins  pq.StringArray    `gorm:"type:text[]"` 
     Fields          datatypes.JSON  
