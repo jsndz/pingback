@@ -28,7 +28,7 @@ func (r *UserRepository) Create(email,auth0ID string) (*model.User ,error) {
 func (r *UserRepository) Get(Auth0ID string) (*model.User, error) {
     var user model.User
 
-	err := r.db.First(&user, "Auth0ID = ?", Auth0ID).First(&user).Error
+	err := r.db.First(&user, "auth0_id = ?", Auth0ID).Error
     if err != nil {
         return nil, err 
     }

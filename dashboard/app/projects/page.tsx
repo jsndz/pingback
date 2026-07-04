@@ -10,6 +10,7 @@ import {
   Chat,
 } from "phosphor-react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 
 interface Project {
   id: string;
@@ -21,55 +22,50 @@ interface Project {
   createdAt: Date;
 }
 
+interface BackendWidget {
+  ID: string;
+  Feedbacks?: unknown[];
+}
+
+interface BackendProject {
+  ID: string;
+  Name: string;
+  CreatedAt: string;
+  Widgets?: BackendWidget[];
+}
+
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Mock data generation
+  // Fetch actual project data
   useEffect(() => {
-    const generateMockProjects = (): Project[] => {
-      const projectNames = [
-        "myapp-frontend",
-        "portfolio-site",
-        "ecommerce-platform",
-        "blog-engine",
-        "dashboard-ui",
-        "mobile-app-api",
-        "landing-page",
-        "docs-website",
-      ];
+    apiFetch("/project")
+      .then((data: unknown) => {
+        const projectList = (data || []) as BackendProject[];
+        const formatted = projectList.map((proj) => {
+          const widget = proj.Widgets && proj.Widgets.length > 0 ? proj.Widgets[0] : null;
+          const widgetId = widget ? widget.ID : "";
+          const feedbackCount = widget && widget.Feedbacks ? widget.Feedbacks.length : 0;
 
-      const websites = [
-        "https://myapp.com",
-        "https://johnsmith.dev",
-        "https://shopnow.store",
-        "https://myblog.io",
-        undefined,
-        "https://api.myapp.com",
-        "https://startup.co",
-        "https://docs.myapp.com",
-      ];
-
-      return projectNames.map((name, i) => ({
-        id: `proj_${i + 1}`,
-        name,
-        websiteUrl: websites[i],
-        feedbackLink: `https://fb.pingback.dev/${Math.random()
-          .toString(36)
-          .substr(2, 8)}`,
-        feedbackCount: Math.floor(Math.random() * 150) + 5,
-        recentFeedbackCount: Math.floor(Math.random() * 12),
-        createdAt: new Date(
-          Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
-        ),
-      }));
-    };
-
-    setTimeout(() => {
-      setProjects(generateMockProjects());
-      setLoading(false);
-    }, 600);
+          return {
+            id: proj.ID,
+            name: proj.Name,
+            websiteUrl: "", // project model doesn't store this currently, we keep it optional
+            feedbackLink: widgetId ? `<script src="http://localhost:8080/widget.js" data-widget-id="${widgetId}"></script>` : "No widget configured",
+            feedbackCount: feedbackCount,
+            recentFeedbackCount: feedbackCount,
+            createdAt: new Date(proj.CreatedAt),
+          };
+        });
+        setProjects(formatted);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch projects:", err);
+        setLoading(false);
+      });
   }, []);
 
   const copyFeedbackLink = async (link: string, projectId: string) => {

@@ -1,0 +1,118 @@
+# Pingback Implementation Roadmap & TODO List
+
+This document provides a step-by-step guide to complete the **Pingback** application, based on the requirements in [README.md](file:///home/jaison/code/projects/pingback/README.md) and the current state of the backend and frontend codebases.
+
+---
+
+## 🛠️ Phase 1: Backend Database & Core Model Fixes
+
+The backend currently has several GORM queries with structural bugs (e.g., querying columns that do not exist or incorrect return types).
+
+- [x] **1.1 Fix GORM Repositories**
+  - [x] **Project Repository** ([projectRepository.go](file:///home/jaison/code/projects/pingback/server/internal/app/repository/projectRepository.go)):
+    - Correct the `Get` method: Fetch projects by `ID` or list all projects belonging to a user (`UserID`), instead of searching by a non-existent `Email` field.
+  - [x] **Widget Repository** ([widget.go](file:///home/jaison/code/projects/pingback/server/internal/app/repository/widget.go)):
+    - Correct the `Get` method: Fetch widgets by `ID` or `ProjectID`, instead of querying by `Email`.
+  - [x] **Feedback Repository** ([feedbackRepository.go](file:///home/jaison/code/projects/pingback/server/internal/app/repository/feedbackRepository.go)):
+    - Correct `GetAll` to query `[]model.Feedback` (slice) instead of a single `model.Feedback`.
+    - Fix the return type of `GetAll` to return a slice `([]model.Feedback, error)`.
+  - [x] **User Repository** ([userRepository.go](file:///home/jaison/code/projects/pingback/server/internal/app/repository/userRepository.go)):
+    - Remove the double `.First(&user)` chain in `Get()` which causes query execution issues.
+
+- [x] **1.2 Setup Database Migration**
+  - [x] Update `MigrateDB` in [migrate.go](file:///home/jaison/code/projects/pingback/server/pkg/db/migrate.go) to auto-migrate all database models:
+    ```go
+    err := db.AutoMigrate(
+        &model.User{},
+        &model.Project{},
+        &model.Widget{},
+        &model.Feedback{},
+    )
+    ```
+  - [x] Call `db.MigrateDB(db)` inside `main()` in [main.go](file:///home/jaison/code/projects/pingback/server/cmd/server/main.go) right after database initialization.
+
+---
+
+## 🔌 Phase 2: Backend API Endpoints Completion
+
+Currently, only `/api/user/me` is wired up. The rest of the routes in [routes.go](file:///home/jaison/code/projects/pingback/server/routes/routes.go) are empty.
+
+- [x] **2.1 Implement Project API**
+  - [x] Define endpoints in [routes.go](file:///home/jaison/code/projects/pingback/server/routes/routes.go#L14):
+    - `POST /api/projects` (Create a project) — *Note: `ProjectHandler` currently has `CreateProjectHandler` partially written, need to wire it to the route.*
+    - `GET /api/projects` (List user's projects)
+    - `DELETE /api/projects/:id` (Delete a project)
+  - [x] Update `ProjectService` and `ProjectRepository` to support listing and deleting projects.
+
+- [x] **2.2 Implement Widget API**
+  - [x] Define endpoints in [routes.go](file:///home/jaison/code/projects/pingback/server/routes/routes.go#L22):
+    - `POST /api/widgets` (Create a widget config for a project)
+    - `GET /api/widgets/:id` (Public config endpoint for the JS script)
+    - `PUT /api/widgets/:id` (Update template, theme, colors, allowed origins, and fields)
+    - `DELETE /api/widgets/:id` (Delete a widget)
+  - [x] Implement handlers in a new file `widgetHandler.go` under `server/internal/app/handler/`.
+  - [x] Create `WidgetService` in a new file `widgetService.go` under `server/internal/app/service/`.
+
+- [x] **2.3 Implement Feedback API**
+  - [x] Define endpoints in [routes.go](file:///home/jaison/code/projects/pingback/server/routes/routes.go#L18):
+    - `POST /api/feedback` (Public endpoint to submit anonymous feedback)
+    - `GET /api/feedback` (Authenticated endpoint to list all feedback for user's projects/widgets)
+  - [x] Update `FeedbackHandler` ([feedbackHandler.go](file:///home/jaison/code/projects/pingback/server/internal/app/handler/feedbackHandler.go)):
+    - Add authentication check for `GET /api/feedback`.
+    - Adjust request validation to match `api.yaml`.
+  - [x] Implement CORS/Allowed Origins validation on the public `POST /api/feedback` endpoint (using the widget configuration's `AllowedOrigins` list to prevent spam from unauthorized domains).
+
+- [x] **2.4 Secure Routes with Auth0 JWT Middleware**
+  - [x] Protect all dashboard-facing endpoints (`/api/projects`, authenticated `GET /api/feedback`, and `/api/widgets` management endpoints) using the `JWTMiddleware` defined in [jwt.go](file:///home/jaison/code/projects/pingback/server/middleware/jwt.go).
+
+---
+
+## 💻 Phase 3: Frontend (Next.js Dashboard) API Integration & Fixes
+
+The frontend is currently relying on mock data and has runtime Next.js navigation bugs.
+
+- [x] **3.1 Fix Next.js Routing Bugs**
+  - [x] In [page.tsx](file:///home/jaison/code/projects/pingback/dashboard/app/projects/create/page.tsx):
+    - Replace `import { useNavigate } from "react-router-dom";` with `import { useRouter } from "next/navigation";`.
+    - Change `const navigate = useNavigate();` to `const router = useRouter();`.
+    - Update redirection calls from `navigate("/projects")` to `router.push("/projects")`.
+  - [x] Remove `react-router-dom` from dependencies in `package.json` to keep the build clean.
+
+- [x] **3.2 Setup Auth0 Routing Handlers**
+  - [x] Auth0 is mounted via middleware in v4, no route handler files are required (obsolete handlers removed).
+  - [x] Update `Navigation.tsx` ([Navigation.tsx](file:///home/jaison/code/projects/pingback/dashboard/components/Navigation.tsx)) to fetch auth state dynamically from Auth0 endpoints instead of hardcoded `authenticated = false`.
+
+- [x] **3.3 Connect Pages to Backend API**
+  - [x] Create an API utility layer (e.g. `dashboard/lib/api.ts`) to manage fetch requests with the Bearer JWT token attached.
+  - [x] **Dashboard Feedbacks Page** ([dashboard/app/dashboard/page.tsx](file:///home/jaison/code/projects/pingback/dashboard/app/dashboard/page.tsx)):
+    - Fetch active submissions from `GET /api/feedback`.
+  - [x] **Projects Page** ([dashboard/app/projects/page.tsx](file:///home/jaison/code/projects/pingback/dashboard/app/projects/page.tsx)):
+    - Fetch actual user projects using `GET /api/projects`.
+  - [x] **Project Creation Page** ([dashboard/app/projects/create/page.tsx](file:///home/jaison/code/projects/pingback/dashboard/app/projects/create/page.tsx)):
+    - Post the project data to `POST /api/projects`.
+  - [x] **Settings Page** ([dashboard/app/settings/page.tsx](file:///home/jaison/code/projects/pingback/dashboard/app/settings/page.tsx)):
+    - Load real profile information and configure settings (e.g., webhook urls).
+
+---
+
+## 📦 Phase 4: Widget Script (`widget.js`) Implementation
+
+A public-facing lightweight script needs to be written to render the feedback widget on client websites.
+
+- [x] **4.1 Create Widget JS Script**
+  - [x] Write a vanilla JS file (`widget.js`) to be hosted/served.
+  - [x] The script should read parameters like `data-widget-id` from its own `<script>` tag.
+  - [x] Fetch configuration from `GET /api/widgets/{widgetId}` to retrieve color theme (`PrimaryColor`), active fields (`Fields`), and UI templates.
+  - [x] Inject a floating button into the client website body.
+  - [x] On button click, open a sleek, responsive iframe or floating shadow-DOM container with the feedback form.
+  - [x] Handle input validation, dynamic field rendering (e.g., email, text rating, feedback message).
+  - [x] Submit payload via `POST /api/feedback` and display a success checkmark message.
+
+---
+
+## 🚀 Phase 5: Testing, Deployment & Verification
+
+- [x] **5.1 End-to-End Verification**
+  - [x] Run backend and frontend locally, and check all endpoints.
+  - [x] Embed the widget script in a test static HTML file to verify CORS headers and submissions.
+  - [x] Ensure Auth0 JWT validation works flawlessly between Next.js frontend and Gin backend.

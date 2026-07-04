@@ -10,11 +10,13 @@ import (
 
 type FeedbackService struct{
 	feedbackRepo *repository.FeedbackRepository
+	widgetRepo   *repository.WidgetRepository
 }
 
 func NewFeedbackService(db *gorm.DB) *FeedbackService{
 	return &FeedbackService{
 		feedbackRepo : repository.NewFeedbackRepository(db),
+		widgetRepo   : repository.NewWidgetRepository(db),
 	}
 }
 
@@ -29,8 +31,16 @@ func (s *FeedbackService) CreateFeedback(widgetID uuid.UUID, data datatypes.JSON
 	return s.feedbackRepo.Create(feedback)
 }
 
-func (s *FeedbackService) GetFeedback(widgetID uuid.UUID) (*model.Feedback, error) {
+func (s *FeedbackService) GetFeedback(widgetID uuid.UUID) ([]model.Feedback, error) {
 	return s.feedbackRepo.GetAll(widgetID)
+}
+
+func (s *FeedbackService) ListFeedbackForUser(userID uuid.UUID) ([]model.Feedback, error) {
+	return s.feedbackRepo.ListByUserID(userID)
+}
+
+func (s *FeedbackService) GetWidgetByID(widgetID uuid.UUID) (*model.Widget, error) {
+	return s.widgetRepo.GetByID(widgetID)
 }
 
 

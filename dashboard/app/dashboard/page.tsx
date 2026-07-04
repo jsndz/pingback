@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Chat, Clock, ArrowLeft, ArrowRight } from "phosphor-react";
+import { apiFetch } from "@/lib/api";
 
 interface Feedback {
   id: string;
@@ -11,65 +12,57 @@ interface Feedback {
   projectName: string;
 }
 
+interface BackendFeedback {
+  ID: string;
+  SubmittedAt: string;
+  Data: string | { content?: string; message?: string };
+  Widget?: {
+    ProjectID: string;
+    Project?: {
+      Name: string;
+    };
+  };
+}
+
 const Dashboard: React.FC = () => {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const feedbackPerPage = 12;
 
-  // Mock data generation
+  // Fetch actual feedback data
   useEffect(() => {
-    const generateMockFeedback = (): Feedback[] => {
-      const messages = [
-        "Love the new dark mode! The contrast is perfect for long coding sessions.",
-        "The search function is super fast but could use better keyboard shortcuts.",
-        "Great work on the mobile responsiveness. Everything looks smooth!",
-        "The loading animations are a bit too slow on mobile devices.",
-        "Amazing product! The integration was seamless and took less than 5 minutes.",
-        "Could you add support for custom themes? The current ones are great but limited.",
-        "The dashboard is intuitive but the export feature seems to be broken.",
-        "Performance has improved significantly since the last update. Well done!",
-        "The API documentation is excellent. Very clear and comprehensive.",
-        "Would love to see real-time notifications for new feedback submissions.",
-        "The pricing is very reasonable compared to other similar tools.",
-        "The onboarding process was smooth and the tutorials were helpful.",
-        "Some buttons are hard to click on mobile. Consider increasing touch targets.",
-        "The analytics section provides great insights into user behavior.",
-        "Integration with Slack would be a game-changer for our team workflow.",
-        "The feedback widget loads quickly and doesn't impact page performance.",
-        "Love the minimalist design approach. It feels very modern and clean.",
-        "The search functionality works well but could use filters for better organization.",
-        "Customer support response time is impressive. Got help within an hour.",
-        "The free tier is generous and perfect for small projects and testing.",
-      ];
+    apiFetch("/feedback")
+      .then((data: unknown) => {
+        const feedbackList = (data || []) as BackendFeedback[];
+        const formatted = feedbackList.map((item) => {
+          let message = "";
+          try {
+            if (item.Data && typeof item.Data === "object") {
+              message = item.Data.content || item.Data.message || "";
+            } else if (item.Data) {
+              const parsed = JSON.parse(item.Data as string);
+              message = parsed.content || parsed.message || "";
+            }
+          } catch {
+            message = (item.Data as string) || "";
+          }
 
-      const projects = [
-        { id: "proj_1", name: "myapp-frontend" },
-        { id: "proj_2", name: "portfolio-site" },
-        { id: "proj_3", name: "ecommerce-platform" },
-        { id: "proj_4", name: "blog-engine" },
-        { id: "proj_5", name: "dashboard-ui" },
-      ];
-
-      return Array.from({ length: 47 }, (_, i) => {
-        const project = projects[Math.floor(Math.random() * projects.length)];
-        const hoursAgo = Math.floor(Math.random() * 168); // Random hours in the past week
-        const timestamp = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-
-        return {
-          id: `feedback_${i + 1}`,
-          message: messages[Math.floor(Math.random() * messages.length)],
-          timestamp,
-          projectId: project.id,
-          projectName: project.name,
-        };
-      }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    };
-
-    setTimeout(() => {
-      setFeedback(generateMockFeedback());
-      setLoading(false);
-    }, 800);
+          return {
+            id: item.ID,
+            message: message,
+            timestamp: new Date(item.SubmittedAt),
+            projectId: item.Widget?.ProjectID || "",
+            projectName: item.Widget?.Project?.Name || "unnamed project",
+          };
+        });
+        setFeedback(formatted);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch feedback:", err);
+        setLoading(false);
+      });
   }, []);
 
   const formatTimeAgo = (date: Date): string => {

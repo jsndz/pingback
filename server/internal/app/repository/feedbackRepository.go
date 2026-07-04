@@ -22,14 +22,30 @@ func (r *FeedbackRepository) Create(feedback *model.Feedback) (*model.Feedback ,
 	return  feedback,nil
 }
 
-func (r *FeedbackRepository) GetAll(widgetId uuid.UUID) (*model.Feedback, error) {
-    var feedback model.Feedback
+func (r *FeedbackRepository) GetAll(widgetId uuid.UUID) ([]model.Feedback, error) {
+    var feedback []model.Feedback
 
-	err := r.db.Find(&feedback, "WidgetID = ?", widgetId).Error
+	err := r.db.Find(&feedback, "widget_id = ?", widgetId).Error
     if err != nil {
         return nil, err 
     }
-    return &feedback, nil
+    return feedback, nil
+}
+
+func (r *FeedbackRepository) ListByUserID(userID uuid.UUID) ([]model.Feedback, error) {
+	var feedbacks []model.Feedback
+	err := r.db.
+		Joins("JOIN widgets ON feedbacks.widget_id = widgets.id").
+		Joins("JOIN projects ON widgets.project_id = projects.id").
+		Where("projects.user_id = ?", userID).
+		Order("feedbacks.submitted_at DESC").
+		Preload("Widget").
+		Preload("Widget.Project").
+		Find(&feedbacks).Error
+	if err != nil {
+		return nil, err
+	}
+	return feedbacks, nil
 }
 
 func (r *FeedbackRepository) Update(ID string,data map[string]any) (*model.Feedback,error){

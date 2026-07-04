@@ -1,5 +1,4 @@
-import React from "react";
-import { ArrowRight, GithubLogo, Terminal } from "phosphor-react";
+import { ArrowRight, GithubLogo } from "phosphor-react";
 
 const Hero: React.FC = () => {
   return (

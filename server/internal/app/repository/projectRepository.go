@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/google/uuid"
 	"github.com/jsndz/pingback/internal/app/model"
 	"gorm.io/gorm"
 )
@@ -21,14 +22,22 @@ func (r *ProjectRepository) Create(project *model.Project) (*model.Project ,erro
 	return  project,nil
 }
 
-func (r *ProjectRepository) Get(Email string) (*model.Project, error) {
+func (r *ProjectRepository) GetByID(id uuid.UUID) (*model.Project, error) {
     var project model.Project
-
-	err := r.db.First(&project, "Email = ?", Email).Error
+	err := r.db.First(&project, "id = ?", id).Error
     if err != nil {
         return nil, err 
     }
     return &project, nil
+}
+
+func (r *ProjectRepository) ListByUserID(userID uuid.UUID) ([]model.Project, error) {
+	var projects []model.Project
+	err := r.db.Preload("Widgets.Feedbacks").Where("user_id = ?", userID).Find(&projects).Error
+	if err != nil {
+		return nil, err
+	}
+	return projects, nil
 }
 
 func (r *ProjectRepository) Update(ID string,data map[string]any) (*model.Project,error){

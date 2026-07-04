@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Spinner } from "phosphor-react";
+import { apiFetch } from "@/lib/api";
 
 interface FormData {
   name: string;
@@ -15,7 +16,7 @@ interface FormErrors {
 }
 
 const CreateProject: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     name: "",
     websiteUrl: "",
@@ -63,17 +64,17 @@ const CreateProject: React.FC = () => {
 
     setLoading(true);
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // In a real app, you would make an API call here
-      console.log("Creating project:", formData);
+      await apiFetch("/project", {
+        method: "POST",
+        body: JSON.stringify({ name: formData.name }),
+      });
 
       // Redirect to projects page
-      navigate("/projects");
+      router.push("/projects");
     } catch (error) {
       console.error("Error creating project:", error);
+      setErrors({ name: "failed to create project. please try again." });
     } finally {
       setLoading(false);
     }
@@ -95,7 +96,7 @@ const CreateProject: React.FC = () => {
           {/* Header */}
           <div className="mb-8">
             <button
-              onClick={() => navigate("/projects")}
+              onClick={() => router.push("/projects")}
               className="flex items-center gap-2 text-[#8891A5] hover:text-[#F2F2F2] transition-colors mb-4"
             >
               <ArrowLeft size={20} />
@@ -174,7 +175,7 @@ const CreateProject: React.FC = () => {
                   </p>
                 )}
                 <p className="mt-2 text-sm text-[#8891A5]">
-                  the website where you'll be collecting feedback from
+                  the website where you&apos;ll be collecting feedback from
                 </p>
               </div>
 
@@ -207,7 +208,7 @@ const CreateProject: React.FC = () => {
               what happens next?
             </h3>
             <ul className="text-sm text-[#8891A5] space-y-1">
-              <li>• you'll get a unique feedback link for your project</li>
+              <li>• you&apos;ll get a unique feedback link for your project</li>
               <li>• embed the feedback widget on your website</li>
               <li>• start collecting anonymous feedback from users</li>
               <li>• view and manage feedback in your dashboard</li>

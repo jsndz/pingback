@@ -16,19 +16,30 @@ const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const [authenticated, setAuthenticated] = useState(false);
-  // const user = async () => {
-  //   const user = await auth0.getSession();
-  //   console.log(user);
-  // };
+
+  useEffect(() => {
+    fetch("/auth/me")
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        return null;
+      })
+      .then((data) => {
+        setAuthenticated(!!data);
+      })
+      .catch(() => {
+        setAuthenticated(false);
+      });
+  }, []);
+
   const navItems = [
     { path: "/", label: "home", icon: HouseSimple },
     { path: "/dashboard", label: "dashboard", icon: ChartBar },
     { path: "/projects", label: "projects", icon: FolderOpen },
     { path: "/settings", label: "settings", icon: Gear },
   ];
-  // useEffect(() => {
-  //   console.log(user);
-  // }, [user]);
+
   const isActive = (path: string) => {
     return pathname === path || pathname.startsWith(path + "/");
   };
@@ -65,19 +76,19 @@ const Navigation: React.FC = () => {
             })}
 
             {authenticated ? (
-              <Link
+              <a
                 href="/auth/logout"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-[#8891A5] hover:text-[#F2F2F2] hover:bg-[#12132D]"
               >
                 <span>Logout</span>
-              </Link>
+              </a>
             ) : (
-              <Link
+              <a
                 href="/auth/login"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-[#8891A5] hover:text-[#F2F2F2] hover:bg-[#12132D]"
               >
                 <span>Login</span>
-              </Link>
+              </a>
             )}
           </div>
 
